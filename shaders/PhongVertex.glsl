@@ -1,67 +1,38 @@
-#version 410 core
-/// @brief the vertex passed in
-layout (location = 0) in vec3 inVert;
-/// @brief the normal passed in
-layout (location = 2) in vec3 inNormal;
-/// @brief the in uv
-layout (location = 1) in vec2 inUV;
-/// @brief flag to indicate if model has unit normals if not normalize
-uniform bool Normalize;
-// the eye position of the camera
-uniform vec3 viewerPos;
-/// @brief the current fragment normal for the vert being processed
-out  vec3 fragmentNormal;
+#version 420                                            // Keeping you on the bleeding edge!
+#extension GL_EXT_gpu_shader4 : enable
+//#extension GL_ARB_shading_language_420pack: enable    // Use for GLSL versions before 420.
 
-
-struct Lights
-{
-  vec4 position;
-  vec4 ambient;
-  vec4 diffuse;
-  vec4 specular;
-};
-
-// array of lights
-uniform Lights light;
-// direction of the lights used for shading
-out vec3 lightDir;
-// out the blinn half vector
-out vec3 halfVector;
-out vec3 eyeDirection;
-out vec3 vPosition;
-
-uniform mat4 MV;
+// The modelview and projection matrices are no longer given in OpenGL 4.2
 uniform mat4 MVP;
-uniform mat3 normalMatrix;
-uniform mat4 M;
+uniform mat4 MV;
+uniform mat4 P;
+uniform mat3 N; // This is the inverse transpose of the mv matrix
 
+// The vertex position attribute
+layout (location=0) in vec3 VertexPosition;
+
+// The texture coordinate attribute
+layout (location=1) in vec2 TexCoord;
+
+// The vertex normal attribute
+layout (location=2) in vec3 VertexNormal;
+
+// These attributes are passed onto the shader (should they all be smoothed?)
+smooth out vec3 WSVertexPosition;
+smooth out vec3 WSVertexNormal;
+smooth out vec2 WSTexCoord;
 
 void main()
 {
-// calculate the fragments surface normal
-fragmentNormal = (normalMatrix*inNormal);
+    // Transform the vertex normal by the inverse transpose modelview matrix
+    WSVertexNormal = normalize(N * VertexNormal);
 
+    // Compute the unprojected vertex position
+    WSVertexPosition = vec3(MV * vec4(VertexPosition, 1.0) );
 
-if (Normalize == true)
-{
- fragmentNormal = normalize(fragmentNormal);
-}
-// calculate the vertex position
-gl_Position = MVP*vec4(inVert,1.0);
+    // Copy across the texture coordinates
+    WSTexCoord = TexCoord;
 
-vec4 worldPosition = M * vec4(inVert, 1.0);
-eyeDirection = normalize(viewerPos - worldPosition.xyz);
-// Get vertex position in eye coordinates
-// Transform the vertex to eye co-ordinates for frag shader
-/// @brief the vertex in eye co-ordinates  homogeneous
-vec4 eyeCord=MV*vec4(inVert,1);
-
-vPosition = eyeCord.xyz / eyeCord.w;;
-
-float dist;
-
-lightDir=vec3(light.position.xyz-eyeCord.xyz);
-dist = length(lightDir);
-lightDir/= dist;
-halfVector = normalize(eyeDirection + lightDir);
+    // Compute the position of the vertex
+    gl_Position = MVP * vec4(VertexPosition,1.0);
 }

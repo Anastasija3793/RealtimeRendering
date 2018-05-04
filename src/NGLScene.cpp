@@ -76,6 +76,19 @@ void NGLScene::initializeGL()
   ngl::Material m( ngl::STDMAT::GOLD );
   // load our material values to the shader into the structure material (see Vertex shader)
   m.loadToShader( "material" );
+
+  //changing material parameters
+  ngl::Vec3 diffuseSet(1.0,1.0,1.0); //1.0,0.6,0.0
+  ngl::Vec3 ambientSet(0.1,0.1,0.1);
+  ngl::Vec3 specularSet(1.0,1.0,1.0);
+  float shininessSet(100.0);
+  shader->setUniform("diffusetest",diffuseSet);
+  shader->setUniform("ambienttest",ambientSet);
+  shader->setUniform("speculartest",specularSet);
+  shader->setUniform("shininesstest",shininessSet);
+
+
+
   // Now we will create a basic Camera from the graphics library
   // This is a static camera so it only needs to be set once
   // First create Values for the camera position
@@ -116,7 +129,7 @@ void NGLScene::loadMatricesToShader()
   normalMatrix.inverse().transpose();
   shader->setUniform( "MV", MV );
   shader->setUniform( "MVP", MVP );
-  shader->setUniform( "normalMatrix", normalMatrix );
+  shader->setUniform( "N", normalMatrix );
   shader->setUniform( "M", M );
 }
 
@@ -147,7 +160,9 @@ void NGLScene::paintGL()
   ngl::VAOPrimitives* prim = ngl::VAOPrimitives::instance();
   // draw
   loadMatricesToShader();
-  prim->draw( "teapot" );
+  prim->createSphere("sphere",0.5,80);
+  prim->draw("sphere");
+//  prim->draw( "teapot" );
 }
 
 //----------------------------------------------------------------------------------------------------------------------

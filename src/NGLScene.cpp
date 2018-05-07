@@ -92,7 +92,7 @@ void NGLScene::initializeGL()
   // Now we will create a basic Camera from the graphics library
   // This is a static camera so it only needs to be set once
   // First create Values for the camera position
-  ngl::Vec3 from( 1, 1, 1 );
+  ngl::Vec3 from( 1, 1, 5 );
   ngl::Vec3 to( 0, 0, 0 );
   ngl::Vec3 up( 0, 1, 0 );
   // now load to our new camera
@@ -160,7 +160,7 @@ void NGLScene::paintGL()
   ngl::VAOPrimitives* prim = ngl::VAOPrimitives::instance();
   // draw
   loadMatricesToShader();
-  prim->createSphere("sphere",0.5,80);
+  prim->createSphere("sphere",0.5,200); //80
   prim->draw("sphere");
 //  prim->draw( "teapot" );
 }

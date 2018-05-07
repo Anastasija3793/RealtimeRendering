@@ -6,6 +6,7 @@ smooth in vec3 WSVertexPosition;
 smooth in vec3 WSVertexNormal;
 smooth in vec2 WSTexCoord;
 
+in vec3 localPos;
 // Structure for holding light parameters
 struct LightInfo {
     vec4 Position; // Light position in eye coords.
@@ -76,6 +77,17 @@ float fbm (in vec2 st) {
     return value;
 }
 //---------------------------------------------------------------------------------------------
+const vec2 invAtan = vec2(0.5191,0.3183);
+// function to take the seam away
+vec2 sphericalTex(vec3 p)
+{
+    vec2 uv  = vec2(atan(p.z, p.x), asin(p.y));
+    uv *= invAtan;
+    uv += 0.5;
+
+    return uv;
+}
+
 
 void main() {
     // Calculate the normal (this is the expensive bit in Phong)
@@ -97,16 +109,14 @@ void main() {
             Light.Ls * speculartest * pow( max( dot(r,v), 0.0 ), shininesstest ));
 
 
+//    vec2 newUv = sphericalTex(vec3(WSTexCoord,1.0));
     //vec2 st = WSTexCoord.xy/WSVertexPosition.xy;
     //st.x *= WSTexCoord.x/WSTexCoord.y;
     vec3 color = vec3(0.465,0.258,0.082);
-    color += fbm(WSTexCoord.xy*5.0)*lightColor; //3.0
+    color += fbm(WSTexCoord*5.0)*lightColor; //3.0
     FragColor = vec4(color,1.0);
 
 }
-
-
-
 
 
 //-------------MARBLE-SHADER-TEST----------------------------

@@ -79,9 +79,9 @@ void main()
     // Copy across the texture coordinates
     WSTexCoord = TexCoord;
 
-    vec3 deform = vec3(0.5,0.5,0.8);
-    deform += fbm(TexCoord*3.0); //3.0
+    //vec3 deform = vec3(0.5,0.5,0.8);
+    float deform = fbm(VertexPosition.xy*3.0); //3.0
 
     // Compute the position of the vertex
-    gl_Position = MVP * vec4(VertexPosition*deform,1.0);
+    gl_Position = MVP * vec4(VertexNormal+VertexPosition*deform,1.0);
 }

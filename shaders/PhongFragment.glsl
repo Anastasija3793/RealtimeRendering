@@ -20,7 +20,7 @@ uniform LightInfo Light = LightInfo(
             vec4(2.0, 2.0, 10.0, 1.0),   // position
             vec3(0.2, 0.2, 0.2),        // La
             vec3(1.0, 1.0, 1.0),        // Ld
-            vec3(1.0, 1.0, 1.0)         // Ls
+            vec3(0.2, 0.2, 0.2)         // Ls
             );
 
 // This is no longer a built-in variable
@@ -77,17 +77,51 @@ float fbm (in vec2 st) {
     return value;
 }
 //---------------------------------------------------------------------------------------------
-const vec2 invAtan = vec2(0.5191,0.3183);
-// function to take the seam away
-vec2 sphericalTex(vec3 p)
-{
-    vec2 uv  = vec2(atan(p.z, p.x), asin(p.y));
-    uv *= invAtan;
-    uv += 0.5;
+//const vec2 invAtan = vec2(0.5191,0.3183);
+//// function to take the seam away
+//vec2 sphericalTex(vec3 p)
+//{
+//    vec2 uv  = vec2(atan(p.z, p.x), asin(p.y));
+//    uv *= invAtan;
+//    uv += 0.5;
 
-    return uv;
+//    return uv;
+//}
+
+//---------------------------------------------------------------------------------------------
+// Noise for smaller random dots
+//Modified from/Noise algorithm from:
+//https://thebookofshaders.com/11/
+//---------------------------------------------------------------------------------------------
+float randomPerlin (in vec2 st) {
+    return fract(sin(dot(st.xy,
+                         vec2(0.170,0.220))) //0.310,0.250
+                 * 43758.993);
 }
+// 2D Noise based on Morgan McGuire @morgan3d
+// https://www.shadertoy.com/view/4dS3Wd
+float noisePerlin (in vec2 st) {
+    vec2 i = floor(st);
+    vec2 f = fract(st);
 
+    // Four corners in 2D of a tile
+    float a = randomPerlin(i);
+    float b = randomPerlin(i + vec2(1.0, 0.0));
+    float c = randomPerlin(i + vec2(0.0, 1.0));
+    float d = randomPerlin(i + vec2(1.0, 1.0));
+
+    // Smooth Interpolation
+
+    // Cubic Hermine Curve.  Same as SmoothStep()
+    vec2 u = f*f*(3.0-2.0*f);
+    // u = smoothstep(0.,1.,f);
+
+    // Mix 4 coorners porcentages
+    return mix(a, b, u.x) +
+            (c - a)* u.y * (1.0 - u.x) +
+            (d - b) * u.x * u.y;
+}
+//---------------------------------------------------------------------------------------------
 
 void main() {
     // Calculate the normal (this is the expensive bit in Phong)
@@ -112,11 +146,21 @@ void main() {
 //    vec2 newUv = sphericalTex(vec3(WSTexCoord,1.0));
     //vec2 st = WSTexCoord.xy/WSVertexPosition.xy;
     //st.x *= WSTexCoord.x/WSTexCoord.y;
+
+//    vec3 colorDots = vec3(0.0);
+//    colorDots += fbmDots(WSTexCoord*1000.0);
+
+    float p = noisePerlin(WSTexCoord*100.0);
+    p = smoothstep(0.01, 0.022, p);
+
     vec3 color = vec3(0.465,0.258,0.082);
     color += fbm(WSTexCoord*5.0)*lightColor; //3.0
-    FragColor = vec4(color,1.0);
+
+    FragColor = vec4(color*vec3(p),1.0);
 
 }
+
+
 
 
 //-------------MARBLE-SHADER-TEST----------------------------
@@ -185,3 +229,46 @@ void main() {
 //    FragColor = vec4(col,1.0);
 //}
 //------------------------------------------------------
+
+
+//smaller dots - maybe use later
+//float randomDots (in vec2 st) {
+//    return fract(sin(dot(st.xy,
+//                         vec2(0.760,0.290)))*
+//        43758.233);
+//}
+
+//// Based on Morgan McGuire @morgan3d
+//// https://www.shadertoy.com/view/4dS3Wd
+//float noiseDots (in vec2 st) {
+//    vec2 i = floor(st);
+//    vec2 f = fract(st);
+
+//    // Four corners in 2D of a tile
+//    float a = randomDots(i);
+//    float b = randomDots(i + vec2(1.0, 0.0));
+//    float c = randomDots(i + vec2(0.0, 1.0));
+//    float d = randomDots(i + vec2(1.0, 1.0));
+
+//    vec2 u = f * f * (3.0 - 2.0 * f);
+
+//    return mix(a, b, u.x) +
+//            (c - a)* u.y * (1.0 - u.x) +
+//            (d - b) * u.x * u.y;
+//}
+
+//#define OCTAVES 6
+//float fbmDots (in vec2 st) {
+//    // Initial values
+//    float value = 0.2;
+//    float amplitude = .7; //.5
+//    float frequency = 0.;
+//    //
+//    // Loop of octaves
+//    for (int i = 0; i < OCTAVES; i++) {
+//        value += amplitude * noiseDots(st);
+//        st *= 2.;
+//        amplitude *= .2; //.5
+//    }
+//    return value;
+//}

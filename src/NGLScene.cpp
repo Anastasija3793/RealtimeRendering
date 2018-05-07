@@ -78,7 +78,7 @@ void NGLScene::initializeGL()
   m.loadToShader( "material" );
 
   //changing material parameters
-  ngl::Vec3 diffuseSet(1.0,1.0,1.0); //1.0,0.6,0.0
+  ngl::Vec3 diffuseSet(0.5,0.5,0.5); //1.0,0.6,0.0
   ngl::Vec3 ambientSet(0.1,0.1,0.1);
   ngl::Vec3 specularSet(1.0,1.0,1.0);
   float shininessSet(100.0);

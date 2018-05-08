@@ -32,66 +32,43 @@ uniform vec3 ambienttest; //Ka
 uniform vec3 speculartest; //Ks
 uniform float shininesstest;
 
+const float PI = 3.1415926535897932384626433832795;
+
 //---------------------------------------------------------------------------------------------
-//Noise algorithm from:
-//https://thebookofshaders.com/13/
+// 3D Noise algorithm from:
+// https://www.shadertoy.com/view/4ddXW4
 //---------------------------------------------------------------------------------------------
-float random (in vec2 st) {
-    return fract(sin(dot(st.xy,
-                         vec2(12.9898,78.233)))*
+float random (float rnd) {
+    return fract(sin(rnd)*
         43758.5453123);
 }
+float noise(vec3 x) {
+        vec3 p = floor(x);
+        vec3 f = fract(x);
+        f = f * f * (3.0 - 2.0 * f);
 
-// Based on Morgan McGuire @morgan3d
-// https://www.shadertoy.com/view/4dS3Wd
-float noise (in vec2 st) {
-    vec2 i = floor(st);
-    vec2 f = fract(st);
-
-    // Four corners in 2D of a tile
-    float a = random(i);
-    float b = random(i + vec2(1.0, 0.0));
-    float c = random(i + vec2(0.0, 1.0));
-    float d = random(i + vec2(1.0, 1.0));
-
-    vec2 u = f * f * (3.0 - 2.0 * f);
-
-    return mix(a, b, u.x) +
-            (c - a)* u.y * (1.0 - u.x) +
-            (d - b) * u.x * u.y;
+        float n = p.x + p.y * 157.0 + 113.0 * p.z;
+        return mix(
+                        mix(mix(random(n + 0.0), random(n + 1.0), f.x),
+                                        mix(random(n + 157.0), random(n + 158.0), f.x), f.y),
+                        mix(mix(random(n + 113.0), random(n + 114.0), f.x),
+                                        mix(random(n + 270.0), random(n + 271.0), f.x), f.y), f.z);
 }
 
-#define OCTAVES 6
-float fbm (in vec2 st) {
-    // Initial values
-    float value = 0.0;
-    float amplitude = .5;
-    float frequency = 0.;
-    //
-    // Loop of octaves
-    for (int i = 0; i < OCTAVES; i++) {
-        value += amplitude * noise(st);
-        st *= 2.;
-        amplitude *= .5;
-    }
-    return value;
+float fbm(vec3 p) {
+        float f = 0.0;
+        f = 0.5000 * noise(p);
+        p *= 3.01;
+        f += 0.2500 * noise(p);
+        p *= 2.02;
+        f += 0.1250 * noise(p);
+
+        return f;
 }
-//---------------------------------------------------------------------------------------------
-//const vec2 invAtan = vec2(0.5191,0.3183);
-//// function to take the seam away
-//vec2 sphericalTex(vec3 p)
-//{
-//    vec2 uv  = vec2(atan(p.z, p.x), asin(p.y));
-//    uv *= invAtan;
-//    uv += 0.5;
-
-//    return uv;
-//}
-
 //---------------------------------------------------------------------------------------------
 // Noise for smaller random dots
-//Modified from/Noise algorithm from:
-//https://thebookofshaders.com/11/
+// Modified from/Noise algorithm from:
+// https://thebookofshaders.com/11/
 //---------------------------------------------------------------------------------------------
 float randomPerlin (in vec2 st) {
     return fract(sin(dot(st.xy,
@@ -122,6 +99,46 @@ float noisePerlin (in vec2 st) {
             (d - b) * u.x * u.y;
 }
 //---------------------------------------------------------------------------------------------
+// Converting 2D to 3D (then we don't have a seam in the noise)
+// Algorithm from:
+// http://www.inear.se/2010/05/spherical-perlin-noise/
+//---------------------------------------------------------------------------------------------
+vec3 convert(float r, vec2 texture)
+{
+    float lat = WSTexCoord.y / r * PI - PI / 2;
+    float lon = WSTexCoord.x / r * 2 * PI - PI;
+    vec3 newP = vec3(cos(lat) * cos(lon),sin(lat),cos(lat) * sin(lon));
+    return newP;
+}
+//---------------------------------------------------------------------------------------------
+
+//float orenNayarDiffuse(
+//  vec3 lightDirection,
+//  vec3 viewDirection,
+//  vec3 surfaceNormal,
+//  float roughness,
+//  float albedo) {
+
+//  float LdotV = dot(lightDirection, viewDirection);
+//  float NdotL = dot(lightDirection, surfaceNormal);
+//  float NdotV = dot(surfaceNormal, viewDirection);
+
+//  float s = LdotV - NdotL * NdotV;
+//  float t = mix(1.0, max(NdotL, NdotV), step(0.0, s));
+
+//  float sigma2 = roughness * roughness;
+//  float A = 1.0 + sigma2 * (albedo / (sigma2 + 0.13) + 0.5 / (sigma2 + 0.33));
+//  float B = 0.45 * sigma2 / (sigma2 + 0.09);
+
+//  return albedo * max(0.0, NdotL) * (A + B * s / t) / PI;
+//}
+
+//uniform MaterialInfo Material = MaterialInfo(
+//            vec4(2.0, 2.0, 10.0, 1.0),   // position
+//            vec3(0.2, 0.2, 0.2),        // La
+//            vec3(1.0, 1.0, 1.0),        // Ld
+//            vec3(0.2, 0.2, 0.2)         // Ls
+//            );
 
 void main() {
     // Calculate the normal (this is the expensive bit in Phong)
@@ -143,132 +160,18 @@ void main() {
             Light.Ls * speculartest * pow( max( dot(r,v), 0.0 ), shininesstest ));
 
 
-//    vec2 newUv = sphericalTex(vec3(WSTexCoord,1.0));
-    //vec2 st = WSTexCoord.xy/WSVertexPosition.xy;
-    //st.x *= WSTexCoord.x/WSTexCoord.y;
+//    float material = orenNayarDiffuse(Light.Position);
+    //vec3 lightColor=vec3(material,1.0);
+    vec3 seamless = convert(1.0,WSTexCoord);
 
-//    vec3 colorDots = vec3(0.0);
-//    colorDots += fbmDots(WSTexCoord*1000.0);
+    float dots = noisePerlin(WSTexCoord*100.0);
+    dots = smoothstep(0.01, 0.022, dots);
 
-    float p = noisePerlin(WSTexCoord*100.0);
-    p = smoothstep(0.01, 0.022, p);
+    float base = fbm(seamless);
 
     vec3 color = vec3(0.465,0.258,0.082);
-    color += fbm(WSTexCoord*5.0)*lightColor; //3.0
+    color += base*dots*lightColor; //3.0 or 5.0
 
-    FragColor = vec4(color*vec3(p),1.0);
+    FragColor = vec4(color,1.0);
 
 }
-
-
-
-
-//-------------MARBLE-SHADER-TEST----------------------------
-//https://thebookofshaders.com/edit.php?log=161128210559
-//float random (in vec2 st) {
-//    return fract(sin(dot(st.xy,
-//                         vec2(12.9898,78.233)))*
-//        43758.5453123);
-//}
-
-//// Based on Morgan McGuire @morgan3d
-//// https://www.shadertoy.com/view/4dS3Wd
-//float noise (in vec2 st) {
-//    vec2 i = floor(st);
-//    vec2 f = fract(st);
-
-//    // Four corners in 2D of a tile
-//    float a = random(i);
-//    float b = random(i + vec2(1.0, 0.0));
-//    float c = random(i + vec2(0.0, 1.0));
-//    float d = random(i + vec2(1.0, 1.0));
-
-//    vec2 u = f * f * (3.0 - 2.0 * f);
-
-//    return mix(a, b, u.x) +
-//            (c - a)* u.y * (1.0 - u.x) +
-//            (d - b) * u.x * u.y;
-//}
-
-//#define OCTAVES 6
-//float fbm (in vec2 st) {
-//    // Initial values
-//    float value = 0.0;
-//    float amplitud = .5;
-//    float frequency = 0.;
-//    //
-//    // Loop of octaves
-//    for (int i = 0; i < OCTAVES; i++) {
-//        value += amplitud * noise(st);
-//        st *= 2.;
-//        amplitud *= .5;
-//    }
-//    return value;
-//}
-
-//float edge(float v, float center, float edge0, float edge1) {
-//    return 1.0 - smoothstep(edge0, edge1, abs(v - center));
-//}
-
-//void main() {
-////    vec2 st = gl_FragCoord.xy / u_resolution.xy;
-////    st.x *= u_resolution.x / u_resolution.y;
-
-
-//    float v0 = edge(fbm(WSTexCoord * 18.0), 0.5, 0.0, 0.2);
-//    float v1 = smoothstep(0.5, 0.51, fbm(WSTexCoord * 14.0));
-//    float v2 = edge(fbm(WSTexCoord * 14.0), 0.5, 0.0, 0.170);
-//    float v3 = edge(fbm(WSTexCoord * 14.0), 0.5, 0.0, 0.122);
-
-//    vec3 col = vec3(1.000,0.969,0.794);
-//    col -= v0 * 0.230;
-//    col = mix(col, vec3(0.970,0.794,0.609), v1);
-//    col = mix(col, vec3(0.510,0.443,0.366), v2);
-//    col -= v3 * 0.2;
-
-//    FragColor = vec4(col,1.0);
-//}
-//------------------------------------------------------
-
-
-//smaller dots - maybe use later
-//float randomDots (in vec2 st) {
-//    return fract(sin(dot(st.xy,
-//                         vec2(0.760,0.290)))*
-//        43758.233);
-//}
-
-//// Based on Morgan McGuire @morgan3d
-//// https://www.shadertoy.com/view/4dS3Wd
-//float noiseDots (in vec2 st) {
-//    vec2 i = floor(st);
-//    vec2 f = fract(st);
-
-//    // Four corners in 2D of a tile
-//    float a = randomDots(i);
-//    float b = randomDots(i + vec2(1.0, 0.0));
-//    float c = randomDots(i + vec2(0.0, 1.0));
-//    float d = randomDots(i + vec2(1.0, 1.0));
-
-//    vec2 u = f * f * (3.0 - 2.0 * f);
-
-//    return mix(a, b, u.x) +
-//            (c - a)* u.y * (1.0 - u.x) +
-//            (d - b) * u.x * u.y;
-//}
-
-//#define OCTAVES 6
-//float fbmDots (in vec2 st) {
-//    // Initial values
-//    float value = 0.2;
-//    float amplitude = .7; //.5
-//    float frequency = 0.;
-//    //
-//    // Loop of octaves
-//    for (int i = 0; i < OCTAVES; i++) {
-//        value += amplitude * noiseDots(st);
-//        st *= 2.;
-//        amplitude *= .2; //.5
-//    }
-//    return value;
-//}

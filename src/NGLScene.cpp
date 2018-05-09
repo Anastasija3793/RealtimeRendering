@@ -68,8 +68,6 @@ void NGLScene::initializeGL()
   shader->attachShaderToProgram( shaderProgram, fragShader );
 
 
-
-
   // now we have associated that data we can link the shader
   shader->linkProgramObject( shaderProgram );
   // and make it active ready to load values
@@ -80,17 +78,6 @@ void NGLScene::initializeGL()
   ngl::Material m( ngl::STDMAT::GOLD );
   // load our material values to the shader into the structure material (see Vertex shader)
   m.loadToShader( "material" );
-
-  //changing material parameters
-//  ngl::Vec3 diffuseSet(0.980, 0.819, 0.380); //1.0,0.6,0.0
-//  ngl::Vec3 ambientSet(0.5,0.5,0.5);
-//  ngl::Vec3 specularSet(1.0,1.0,1.0);
-//  float shininessSet(10.0);
-//  shader->setUniform("diffusetest",diffuseSet);
-//  shader->setUniform("ambienttest",ambientSet);
-//  shader->setUniform("speculartest",specularSet);
-//  shader->setUniform("shininesstest",shininessSet);
-
 
 
   // Now we will create a basic Camera from the graphics library
@@ -104,7 +91,7 @@ void NGLScene::initializeGL()
   m_cam.set( from, to, up );
   // set the shape using FOV 45 Aspect Ratio based on Width and Height
   // The final two are near and far clipping planes of 0.5 and 10
-  m_cam.setShape( 45.0f, 720.0f / 576.0f, 0.05f, 350.0f );
+  m_cam.setShape( 45.0f, 1280.0f / 720.0f, 0.05f, 350.0f );
   shader->setUniform( "viewerPos", m_cam.getEye().toVec3() );
   //shader->setUniform("albedo",glm::vec3(1,1,1));
     shader->setUniform("metallic",0.01f);

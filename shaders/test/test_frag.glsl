@@ -208,8 +208,8 @@ void main()
     float dots = noisePerlin(TexCoords*100.0);
     dots = smoothstep(0.001, 0.052, dots);
 
-//    float white = noisePerlin(WSTexCoord*100.0);
-//    white = smoothstep(0.01, 0.022, dots);
+    float spots = noisePerlin(TexCoords*15.0);
+    spots = smoothstep(0.01, 0.12, spots);
 
     //vec3 rough = vec3(power,power,power);
     //vec3 fffcolor = vec3(0.465,0.258,0.082);
@@ -218,7 +218,7 @@ void main()
     //colorWhite += white;
     fffcolor = mix(vec3(0),fffcolor, base); //3.0 or 5.0
 
-    myColor = mix(vec3(0),fffcolor,dots);
+    myColor = mix(vec3(0.121, 0.082, 0.019),fffcolor,dots*spots);
     float myRoughness = noisePerlin(TexCoords)*0.5;
     // calculate reflectance at normal incidence; if dia-electric (like plastic) use F0
     // of 0.04 and if it's a metal, use their albedo color as F0 (metallic workflow)

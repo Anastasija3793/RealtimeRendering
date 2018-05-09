@@ -78,7 +78,7 @@ void NGLScene::initializeGL()
   m.loadToShader( "material" );
 
   //changing material parameters
-  ngl::Vec3 diffuseSet(0.5,0.5,0.5); //1.0,0.6,0.0
+  ngl::Vec3 diffuseSet(0.465,0.258,0.082); //1.0,0.6,0.0
   ngl::Vec3 ambientSet(0.1,0.1,0.1);
   ngl::Vec3 specularSet(1.0,1.0,1.0);
   float shininessSet(100.0);
@@ -95,6 +95,7 @@ void NGLScene::initializeGL()
   ngl::Vec3 from( 1, 1, 5 );
   ngl::Vec3 to( 0, 0, 0 );
   ngl::Vec3 up( 0, 1, 0 );
+  //shader->setUniform("eyePosition",from);
   // now load to our new camera
   m_cam.set( from, to, up );
   // set the shape using FOV 45 Aspect Ratio based on Width and Height

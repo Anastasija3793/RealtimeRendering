@@ -78,10 +78,10 @@ void NGLScene::initializeGL()
   m.loadToShader( "material" );
 
   //changing material parameters
-  ngl::Vec3 diffuseSet(0.465,0.258,0.082); //1.0,0.6,0.0
-  ngl::Vec3 ambientSet(0.1,0.1,0.1);
+  ngl::Vec3 diffuseSet(0.980, 0.819, 0.380); //1.0,0.6,0.0
+  ngl::Vec3 ambientSet(0.5,0.5,0.5);
   ngl::Vec3 specularSet(1.0,1.0,1.0);
-  float shininessSet(100.0);
+  float shininessSet(10.0);
   shader->setUniform("diffusetest",diffuseSet);
   shader->setUniform("ambienttest",ambientSet);
   shader->setUniform("speculartest",specularSet);

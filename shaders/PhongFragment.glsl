@@ -201,10 +201,10 @@ void main() {
       0.8);
 
     // Compute the light from the ambient, diffuse and specular components
-//    vec3 lightColor = (
-//            Light.La * ambienttest +
-//            Light.Ld * diffusetest * max( dot(s, n), 0.0 ) +
-//            Light.Ls * speculartest * pow( max( dot(r,v), 0.0 ), shininesstest ));
+    vec3 lightColor = (
+            Light.La * ambienttest +
+            Light.Ld * diffusetest*power * max( dot(s, n), 0.0 ) +
+            Light.Ls * speculartest/2 * pow( max( dot(r,v), 0.0 ), shininesstest ));
 //    vec3 lightColor = (
 //                Light.La +
 //                Light.Ld+
@@ -228,9 +228,10 @@ void main() {
     //vec3 colorWhite = vec3(1.0,0.0,0.0);
     //colorWhite += white;
     color += base*dots; //3.0 or 5.0
+    //vec3 lightColor =
 
 
     //FragColor = vec4(color*lightColor,1.0);
-    FragColor = vec4(color*power*1.5,1.0);
+    FragColor = vec4(color*lightColor*2.0,1.0);
 
 }

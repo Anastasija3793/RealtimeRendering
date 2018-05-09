@@ -7,21 +7,47 @@ smooth in vec3 WSVertexNormal;
 smooth in vec2 WSTexCoord;
 
 in vec3 localPos;
+// First making lambert
+// Then use oren nayar diffuse
+
 // Structure for holding light parameters
 struct LightInfo {
     vec3 Position; // Light position in eye coords.
-    vec3 La; // Ambient light intensity
     vec3 Ld; // Diffuse light intensity
-    vec3 Ls; // Specular light intensity
 };
 
 // We'll have a single light in the scene with some default values
 uniform LightInfo Light = LightInfo(
             vec3(2.0, 2.0, 10.0),   // position //vec4(2.0, 2.0, 10.0, 1.0)
-            vec3(0.2, 0.2, 0.2),        // La
-            vec3(1.0, 1.0, 1.0),        // Ld
-            vec3(0.2, 0.2, 0.2)         // Ls
+            vec3(1, 0.941, 0.819)        // Ld
             );
+
+//// The material properties of our object
+//struct MaterialInfo {
+//    vec3 Ka; // Ambient reflectivity
+//    vec3 Kd; // Diffuse reflectivity
+//    vec3 Ks; // Specular reflectivity
+//    float Shininess; // Specular shininess factor
+//};
+
+//// The object has a material
+//uniform MaterialInfo Material = MaterialInfo(
+//            vec3(0.5,0.5,0.5),    // Ka
+//            vec3(0.980, 0.819, 0.380),    // Kd
+//            vec3(1.0, 1.0, 1.0),    // Ks
+//            10.0                    // Shininess
+//            );
+
+
+
+float lambert(vec3 N, vec3 L)
+{
+  vec3 nrmN = normalize(N);
+  vec3 nrmL = normalize(L);
+  float result = dot(nrmN, nrmL);
+  return max(result, 0.0);
+}
+
 
 // This is no longer a built-in variable
 out vec4 FragColor;
@@ -30,11 +56,6 @@ out vec4 FragColor;
 //uniform vec3 eyePosition;
 //varying vec3 surfacePosition, surfaceNormal;
 
-
-uniform vec3 diffusetest; //Kd
-uniform vec3 ambienttest; //Ka
-uniform vec3 speculartest; //Ks
-uniform float shininesstest;
 uniform vec3 viewerPos;
 
 const float PI = 3.1415926535897932384626433832795;
@@ -104,38 +125,6 @@ float noisePerlin (in vec2 st) {
             (d - b) * u.x * u.y;
 }
 
-//float randomWhite (in vec2 st) {
-//    return fract(sin(dot(st.xy,
-//                         vec2(0.170,0.220))) //0.310,0.250
-//                 * 43758.993);
-//}
-
-//// 2D Noise based on Morgan McGuire @morgan3d
-//// https://www.shadertoy.com/view/4dS3Wd
-//float noiseWhite (in vec2 st) {
-//    vec2 i = floor(st);
-//    vec2 f = fract(st);
-
-//    // Four corners in 2D of a tile
-//    float a = randomWhite(i);
-//    float b = randomWhite(i + vec2(1.0, 0.0));
-//    float c = randomWhite(i + vec2(0.0, 1.0));
-//    float d = randomWhite(i + vec2(1.0, 1.0));
-
-//    // Smooth Interpolation
-
-//    // Cubic Hermine Curve.  Same as SmoothStep()
-//    vec2 u = f*f*(3.0-2.0*f);
-//    // u = smoothstep(0.,1.,f);
-
-//    // Mix 4 coorners porcentages
-//    return mix(a, b, u.x) +
-//            (c - a)* u.y * (1.0 - u.x) +
-//            (d - b) * u.x * u.y;
-//}
-
-
-
 //---------------------------------------------------------------------------------------------
 // Converting 2D to 3D (then we don't have a seam in the noise)
 // Algorithm from:
@@ -173,6 +162,38 @@ float orenNayarDiffuse(
   return albedo * max(0.0, NdotL) * (A + B * s / t) / PI;
 }
 //---------------------------------------------------------------------------------------------
+
+
+float rndRough (in vec2 st) {
+    return fract(sin(dot(st.xy,
+                         vec2(0.170,0.220))) //0.310,0.250
+                 * 43758.993);
+}
+
+// 2D Noise based on Morgan McGuire @morgan3d
+// https://www.shadertoy.com/view/4dS3Wd
+float noiseRough (in vec2 st) {
+    vec2 i = floor(st);
+    vec2 f = fract(st);
+
+    // Four corners in 2D of a tile
+    float a = rndRough(i);
+    float b = rndRough(i + vec2(1.0, 0.0));
+    float c = rndRough(i + vec2(0.0, 1.0));
+    float d = rndRough(i + vec2(1.0, 1.0));
+
+    // Smooth Interpolation
+
+    // Cubic Hermine Curve.  Same as SmoothStep()
+    vec2 u = f*f*(3.0-2.0*f);
+    // u = smoothstep(0.,1.,f);
+
+    // Mix 4 coorners porcentages
+    return mix(a, b, u.x) +
+            (c - a)* u.y * (1.0 - u.x) +
+            (d - b) * u.x * u.y;
+}
+
 void main() {
     // Calculate the normal (this is the expensive bit in Phong)
     vec3 n = normalize( WSVertexNormal );
@@ -186,11 +207,17 @@ void main() {
     // Reflect the light about the surface normal
     vec3 r = reflect( -s, n );
 
-    //float rough = orenNayarDiffuse(vec3(1.0,5.0,5.0),vec3(1.0,1.0,1.0),n,0.5,0.5);
 
+    //--------------------------OREN NAYAR--------------------------
     //Light and view geometry
     vec3 lightDirection = normalize(Light.Position - WSVertexPosition);
     vec3 viewDirection = normalize(viewerPos - WSVertexPosition);
+
+
+    vec2 posR = vec2(WSVertexPosition*50.0); //2.656
+    float rough = noiseRough(posR);
+
+//    float deform = fbmR(WSVertexPosition.xy*3.0); //3.0
 
     //Compute diffuse light intensity
     float power = orenNayarDiffuse(
@@ -200,16 +227,7 @@ void main() {
       0.8,
       0.8);
 
-    // Compute the light from the ambient, diffuse and specular components
-    vec3 lightColor = (
-            Light.La * ambienttest +
-            Light.Ld * diffusetest*power * max( dot(s, n), 0.0 ) +
-            Light.Ls * speculartest/2 * pow( max( dot(r,v), 0.0 ), shininesstest ));
-//    vec3 lightColor = (
-//                Light.La +
-//                Light.Ld+
-//                Light.Ls
-//                );
+    vec3 lightColor = (Light.Ld*power) * lambert(WSVertexNormal, Light.Position);
 
 
     //float material = orenNayarDiffuse(Light.Position);
@@ -228,10 +246,9 @@ void main() {
     //vec3 colorWhite = vec3(1.0,0.0,0.0);
     //colorWhite += white;
     color += base*dots; //3.0 or 5.0
-    //vec3 lightColor =
 
 
     //FragColor = vec4(color*lightColor,1.0);
-    FragColor = vec4(color*lightColor*2.0,1.0);
+    FragColor = vec4(color*lightColor*1.7,1.0);
 
 }

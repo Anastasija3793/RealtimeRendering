@@ -68,24 +68,28 @@ void NGLScene::initializeGL()
   shader->attachShaderToProgram( shaderProgram, fragShader );
 
 
+
+
   // now we have associated that data we can link the shader
   shader->linkProgramObject( shaderProgram );
   // and make it active ready to load values
   ( *shader )[ shaderProgram ]->use();
+  shader->loadShader("PBR", "shaders/test/test_vert.glsl", "shaders/test/test_frag.glsl");
+  ( *shader )[ "PBR" ]->use();
   // the shader will use the currently active material and light0 so set them
   ngl::Material m( ngl::STDMAT::GOLD );
   // load our material values to the shader into the structure material (see Vertex shader)
   m.loadToShader( "material" );
 
   //changing material parameters
-  ngl::Vec3 diffuseSet(0.980, 0.819, 0.380); //1.0,0.6,0.0
-  ngl::Vec3 ambientSet(0.5,0.5,0.5);
-  ngl::Vec3 specularSet(1.0,1.0,1.0);
-  float shininessSet(10.0);
-  shader->setUniform("diffusetest",diffuseSet);
-  shader->setUniform("ambienttest",ambientSet);
-  shader->setUniform("speculartest",specularSet);
-  shader->setUniform("shininesstest",shininessSet);
+//  ngl::Vec3 diffuseSet(0.980, 0.819, 0.380); //1.0,0.6,0.0
+//  ngl::Vec3 ambientSet(0.5,0.5,0.5);
+//  ngl::Vec3 specularSet(1.0,1.0,1.0);
+//  float shininessSet(10.0);
+//  shader->setUniform("diffusetest",diffuseSet);
+//  shader->setUniform("ambienttest",ambientSet);
+//  shader->setUniform("speculartest",specularSet);
+//  shader->setUniform("shininesstest",shininessSet);
 
 
 
@@ -102,6 +106,12 @@ void NGLScene::initializeGL()
   // The final two are near and far clipping planes of 0.5 and 10
   m_cam.setShape( 45.0f, 720.0f / 576.0f, 0.05f, 350.0f );
   shader->setUniform( "viewerPos", m_cam.getEye().toVec3() );
+  //shader->setUniform("albedo",glm::vec3(1,1,1));
+    shader->setUniform("metallic",0.01f);
+    shader->setUniform("roughness",0.8f);
+    shader->setUniform("ao",1.0f);
+    shader->setUniform("camPos", m_cam.getEye());
+    shader->setUniform("exposure", 1.0f);
   // now create our light that is done after the camera so we can pass the
   // transpose of the projection matrix to the light to do correct eye space
   // transformations
@@ -142,8 +152,8 @@ void NGLScene::paintGL()
 
   // grab an instance of the shader manager
   ngl::ShaderLib* shader = ngl::ShaderLib::instance();
-  ( *shader )[ "Phong" ]->use();
-
+  //( *shader )[ "Phong" ]->use();
+( *shader )[ "PBR" ]->use();
   // Rotation based on the mouse position for our global transform
   ngl::Mat4 rotX;
   ngl::Mat4 rotY;
@@ -161,6 +171,9 @@ void NGLScene::paintGL()
   ngl::VAOPrimitives* prim = ngl::VAOPrimitives::instance();
   // draw
   loadMatricesToShader();
+  shader->setUniform("metallic",0.01f); //0.5
+  shader->setUniform("roughness",0.2f); //0.5
+  shader->setUniform("ao",1.0f); //1.0
   prim->createSphere("sphere",0.5,200); //80
   prim->draw("sphere");
 //  prim->draw( "teapot" );

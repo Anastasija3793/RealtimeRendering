@@ -18,6 +18,11 @@ out vec3 Normal;
 
 out vec3 localPos;
 
+//---------------------------------------------------------------------------------------------
+// Noise for base shape
+// Modified from/Noise algorithm from:
+// https://thebookofshaders.com/11/
+//---------------------------------------------------------------------------------------------
 float random (in vec2 st) {
     return fract(sin(dot(st.xy,
                          vec2(0.170,0.220))) //0.310,0.250
@@ -49,8 +54,8 @@ float noise (in vec2 st) {
 }
 //---------------------------------------------------------------------------------------------
 // Noise for smaller displacement
-//Modified from/Noise algorithm from:
-//https://thebookofshaders.com/13/
+// Modified from/Noise algorithm from:
+// https://thebookofshaders.com/13/
 //---------------------------------------------------------------------------------------------
 float randomSmaller (in vec2 st) {
     return fract(sin(dot(st.xy,
@@ -92,7 +97,7 @@ float fbm (in vec2 st) {
     }
     return value;
 }
-
+//---------------------------------------------------------------------------------------------
 void main()
 {
     Normal = normalize(N * inNormal);
@@ -104,11 +109,11 @@ void main()
     // Copy across the texture coordinates
     TexCoords = inUV;
 
-    //vec3 deform = vec3(0.5,0.5,0.8);
-    float deform = fbm(inVert.xy*3.0); //3.0
+    // creating some smaller deformation
+    float deform = fbm(inVert.xy*3.0);
 
-    vec2 pos = vec2(inVert*2.544); //2.656
-
+    // creating main deformation for the shape
+    vec2 pos = vec2(inVert*2.544);
     float n = noise(pos);
 
     // Compute the position of the vertex

@@ -1,4 +1,6 @@
 #version 330 core
+// The initial PBR code from Jon Macy: https://github.com/NCCA/PBR/tree/master/SimplePBR
+// Modified / edited by Anastasija Belaka
 // This code is based on code from here https://learnopengl.com/#!PBR/Lighting
 layout (location =0) out vec4 fragColour;
 
@@ -7,6 +9,7 @@ in vec3 WorldPos;
 in vec3 Normal;
 in mat3 TBN;
 
+// base colour for the sphere
 const vec3 potatoBaseColor = vec3(0.465,0.258,0.082);
 
 in vec3 localPos;
@@ -28,6 +31,10 @@ uniform vec3 camPos;
 
 const float PI = 3.1415926535897932384626433832795;
 
+//---------------------------------------------------------------------------------------------
+// 3D Noise algorithm from (edited):
+// https://www.shadertoy.com/view/4ddXW4
+//---------------------------------------------------------------------------------------------
 float random (float rnd) {
     return fract(sin(rnd)*
         43758.5453123);
@@ -142,7 +149,9 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0)
 {
     return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
 }
-// ----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+// From http://www.neilmendoza.com/glsl-rotation-about-an-arbitrary-axis/
+//----------------------------------------------------------------------------
 mat4 rotationMatrix(vec3 axis, float angle)
 {
     //axis = normalize(axis);
@@ -177,8 +186,8 @@ void main()
     vec3 V = normalize(camPos - WorldPos);
     vec3 R = reflect(-V, N);
 
+    // creating a rough/bump surface (using noise)
     float f = noisePerlin(TexCoords*100.f);
-
     float s11 = f;
     float s01 = noisePerlin((TexCoords+off.xy)*400.f);
     float s21 = noisePerlin((TexCoords+off.zx)*400.f);
@@ -199,19 +208,24 @@ void main()
 
     vec3 myColor = albedo;
 
+    // making sure there is no seam
     vec3 seamless = convert(1.0,TexCoords);
     float base = fbm(seamless);
 
+    // creating small dots (using noise with smoothstep)
     float dots = noisePerlin(TexCoords*100.0);
     dots = smoothstep(0.001, 0.052, dots);
 
+    // creating bigger spots (using same noise with smoothstep)
     float spots = noisePerlin(TexCoords*15.0);
     spots = smoothstep(0.01, 0.12, spots);
 
-    vec3 fffcolor =  potatoBaseColor*2.0;
-    fffcolor = mix(vec3(0),fffcolor, base); //3.0 or 5.0
+    // mixing base colour and noise (with no seam)
+    vec3 colorBase =  potatoBaseColor*2.0;
+    colorBase = mix(vec3(0),colorBase, base);
 
-    myColor = mix(vec3(0.121, 0.082, 0.019),fffcolor,dots*spots);
+    // mixing base noise with small dots and big spots
+    myColor = mix(vec3(0.121, 0.082, 0.019),colorBase,dots*spots);
     float myRoughness = roughness;
     // calculate reflectance at normal incidence; if dia-electric (like plastic) use F0
     // of 0.04 and if it's a metal, use their albedo color as F0 (metallic workflow)

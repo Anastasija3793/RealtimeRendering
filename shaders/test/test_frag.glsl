@@ -7,9 +7,7 @@ in vec3 WorldPos;
 in vec3 Normal;
 in mat3 TBN;
 
-//const vec3 potatoBaseColor = vec3(226.f/255.f, 192.f/255.f, 79.f/255.f);
 const vec3 potatoBaseColor = vec3(0.465,0.258,0.082);
-//const vec3 potatoBaseColor = vec3(255.f/255.f, 193.f/255.f, 22.f/255.f);
 
 in vec3 localPos;
 
@@ -20,14 +18,13 @@ uniform float roughness;
 uniform float ao;
 
 const ivec3 off = ivec3(-1,0,1);
-const vec2 size = vec2(3.0,0.0);
+const vec2 size = vec2(7.0,0.0);
 
 // lights
 const vec3 lightPosition = vec3(1,1,1);
 const vec3 lightColor = vec3(300,300,300);
 
 uniform vec3 camPos;
-uniform float exposure;
 
 const float PI = 3.1415926535897932384626433832795;
 
@@ -211,18 +208,14 @@ void main()
     float spots = noisePerlin(TexCoords*15.0);
     spots = smoothstep(0.01, 0.12, spots);
 
-    //vec3 rough = vec3(power,power,power);
-    //vec3 fffcolor = vec3(0.465,0.258,0.082);
     vec3 fffcolor =  potatoBaseColor*2.0;
-    //vec3 colorWhite = vec3(1.0,0.0,0.0);
-    //colorWhite += white;
     fffcolor = mix(vec3(0),fffcolor, base); //3.0 or 5.0
 
     myColor = mix(vec3(0.121, 0.082, 0.019),fffcolor,dots*spots);
-    float myRoughness = noisePerlin(TexCoords)*0.5;
+    float myRoughness = roughness;
     // calculate reflectance at normal incidence; if dia-electric (like plastic) use F0
     // of 0.04 and if it's a metal, use their albedo color as F0 (metallic workflow)
-    vec3 F0 = vec3(0.04);
+    vec3 F0 = vec3(0.03);
     F0 = mix(F0, myColor, metallic);
 
     // reflectance equation

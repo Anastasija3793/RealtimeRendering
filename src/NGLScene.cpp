@@ -93,12 +93,11 @@ void NGLScene::initializeGL()
   // The final two are near and far clipping planes of 0.5 and 10
   m_cam.setShape( 45.0f, 1280.0f / 720.0f, 0.05f, 350.0f );
   shader->setUniform( "viewerPos", m_cam.getEye().toVec3() );
-  //shader->setUniform("albedo",glm::vec3(1,1,1));
+  //shader->setUniform("albedo",ngl::Vec3(1,1,1));
     shader->setUniform("metallic",0.01f);
-    shader->setUniform("roughness",0.8f);
+    shader->setUniform("roughness",0.2f); //0.8f
     shader->setUniform("ao",1.0f);
     shader->setUniform("camPos", m_cam.getEye());
-    shader->setUniform("exposure", 1.0f);
   // now create our light that is done after the camera so we can pass the
   // transpose of the projection matrix to the light to do correct eye space
   // transformations
@@ -159,7 +158,7 @@ void NGLScene::paintGL()
   // draw
   loadMatricesToShader();
   shader->setUniform("metallic",0.01f); //0.5
-  shader->setUniform("roughness",0.2f); //0.5
+  shader->setUniform("roughness",0.5f); //0.5
   shader->setUniform("ao",1.0f); //1.0
   prim->createSphere("sphere",0.5,200); //80
   prim->draw("sphere");

@@ -72,7 +72,7 @@ void NGLScene::initializeGL()
   shader->linkProgramObject( shaderProgram );
   // and make it active ready to load values
   ( *shader )[ shaderProgram ]->use();
-  shader->loadShader("PBR", "shaders/test/test_vert.glsl", "shaders/test/test_frag.glsl");
+  shader->loadShader("PBR", "shaders/PBR/PotatoPBR_vert.glsl", "shaders/PBR/PotatoPBR_frag.glsl");
   ( *shader )[ "PBR" ]->use();
   // the shader will use the currently active material and light0 so set them
   ngl::Material m( ngl::STDMAT::GOLD );

@@ -28,6 +28,7 @@ DESTDIR=./
 # add the glsl shader files
 OTHER_FILES+= shaders/*.glsl \
               $$files($$PWD/shaders/PBR/*glsl) \
+              $$files($$PWD/shaders/test/*glsl) \
               README.md \
               SimpleNGL.py
 # were are going to default to a console app

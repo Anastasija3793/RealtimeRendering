@@ -58,8 +58,8 @@ void NGLScene::initializeGL()
   shader->attachShader( vertexShader, ngl::ShaderType::VERTEX );
   shader->attachShader( fragShader, ngl::ShaderType::FRAGMENT );
   // attach the source
-  shader->loadShaderSource( vertexShader, "shaders/PhongVertex.glsl" );
-  shader->loadShaderSource( fragShader, "shaders/PhongFragment.glsl" );
+  shader->loadShaderSource( vertexShader, "shaders/test/test_PhongVertex.glsl" );
+  shader->loadShaderSource( fragShader, "shaders/test/test_PhongFragment.glsl" );
   // compile the shaders
   shader->compileShader( vertexShader );
   shader->compileShader( fragShader );
